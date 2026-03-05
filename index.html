@@ -28,16 +28,19 @@ textarea{height:50px}
 
 <h1>Controle de Chips PRO - Global Rastreamento</h1>
 <div class="status" id="status">🔄 Conectando ao Firebase...</div>
+
 <div class="top-links">
 <button class="add-btn" onclick="adicionarChip()">Adicionar Chip</button>
 <button class="add-btn" onclick="exportarPDF()">📄 Exportar PDF</button>
 <button class="add-btn" onclick="mostrarDashboard()">📊 Dashboard</button>
 </div>
+
 <div class="board" id="board"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } 
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "SUA_API_KEY",
@@ -58,25 +61,34 @@ etapas.forEach(e=>dados[e]=[]);
 function criarBoard(dados){
   const board = document.getElementById("board");
   board.innerHTML = "";
+
   etapas.forEach(etapa=>{
     let col = document.createElement("div");
     col.className="column";
-    let titulo = document.createElement("h3");
-    titulo.innerText = etapa;
+
+    let titulo=document.createElement("h3");
+    titulo.innerText=etapa;
     col.appendChild(titulo);
 
-    let contador = document.createElement("div");
+    let contador=document.createElement("div");
     contador.className="counter";
-    contador.innerText = "Total: "+(dados[etapa]?.length||0);
+    contador.innerText="Total: "+(dados[etapa]?.length||0);
     col.appendChild(contador);
 
     (dados[etapa]||[]).forEach(chip=>{
-      let card = document.createElement("div");
+      let card=document.createElement("div");
       card.className="card";
-      card.innerHTML = `
+
+      card.innerHTML=`
 <strong>${chip.numero||"Sem número"}</strong>
-<textarea placeholder="Observações" oninput="editarObservacao('${chip.id}',this.value)">${chip.observacao||""}</textarea>
-<input type="text" placeholder="Cliente vinculado" value="${chip.cliente||""}" oninput="editarCliente('${chip.id}',this.value)">
+
+<textarea placeholder="Observações" 
+oninput="editarObservacao('${chip.id}',this.value)">${chip.observacao||""}</textarea>
+
+<input type="text" placeholder="Cliente vinculado"
+value="${chip.cliente||""}"
+oninput="editarCliente('${chip.id}',this.value)">
+
 <select onchange="alterarStatus('${chip.id}',this.value)">
 <option value="Em Estoque" ${chip.status==="Em Estoque"?"selected":""}>Em Estoque</option>
 <option value="Em Uso" ${chip.status==="Em Uso"?"selected":""}>Em Uso</option>
@@ -84,12 +96,23 @@ function criarBoard(dados){
 <option value="Perdido" ${chip.status==="Perdido"?"selected":""}>Perdido</option>
 <option value="Aguardando Ativação" ${chip.status==="Aguardando Ativação"?"selected":""}>Aguardando Ativação</option>
 </select>
-<input type="text" placeholder="Operadora" value="${chip.operadora||""}" oninput="editarOperadora('${chip.id}',this.value)">
-<input type="text" placeholder="Fornecedor" value="${chip.fornecedor||""}" oninput="editarFornecedor('${chip.id}',this.value)">
+
+<input type="text" placeholder="Operadora"
+value="${chip.operadora||""}"
+oninput="editarOperadora('${chip.id}',this.value)">
+
+<input type="text" placeholder="Fornecedor"
+value="${chip.fornecedor||""}"
+oninput="editarFornecedor('${chip.id}',this.value)">
+
 <button class="delete-btn" onclick="removerChip('${chip.id}')">Excluir</button>
 <button class="small-btn" onclick="copiarMensagem('${chip.id}')">Copiar Msg WhatsApp</button>
-<textarea id="msg-${chip.id}" style="display:none;">Olá! Estou entrando em contato sobre o chip ${chip.numero}</textarea>
+
+<textarea id="msg-${chip.id}" style="display:none;">
+Olá! Estou entrando em contato sobre o chip ${chip.numero}
+</textarea>
 `;
+
       col.appendChild(card);
     });
 
@@ -97,12 +120,12 @@ function criarBoard(dados){
   });
 }
 
-// ===== FUNÇÕES =====
 async function adicionarChip(){
   let numero = prompt("Número do chip / ICCID:");
   if(!numero) return;
+
   await addDoc(collection(db,"chips"),{
-    numero,
+    numero:numero,
     status:"Em Estoque",
     cliente:"",
     operadora:"",
@@ -115,42 +138,64 @@ async function editarObservacao(id,texto){ await updateDoc(doc(db,"chips",id),{o
 async function editarCliente(id,texto){ await updateDoc(doc(db,"chips",id),{cliente:texto}); }
 async function editarOperadora(id,texto){ await updateDoc(doc(db,"chips",id),{operadora:texto}); }
 async function editarFornecedor(id,texto){ await updateDoc(doc(db,"chips",id),{fornecedor:texto}); }
-async function alterarStatus(id,status){ await updateDoc(doc(db,"chips",id),{status}); }
-async function removerChip(id){ if(confirm("Deseja realmente remover este chip?")){ await deleteDoc(doc(db,"chips",id)); } }
-function copiarMensagem(id){ let msg=document.getElementById(`msg-${id}`); navigator.clipboard.writeText(msg.value); alert("Mensagem copiada para WhatsApp!"); }
+async function alterarStatus(id,status){ await updateDoc(doc(db,"chips",id),{status:status}); }
+
+async function removerChip(id){
+ if(confirm("Deseja realmente remover este chip?")){
+   await deleteDoc(doc(db,"chips",id));
+ }
+}
+
+function copiarMensagem(id){
+ let msg=document.getElementById(`msg-${id}`);
+ navigator.clipboard.writeText(msg.value);
+ alert("Mensagem copiada para WhatsApp!");
+}
 
 function mostrarDashboard(){
-  const resumo = etapas.map(e=>`${e}: ${dados[e]?.length||0}`).join(" | ");
-  alert("📊 Dashboard:\n"+resumo);
+ let resumo = etapas.map(e=>`${e}: ${dados[e]?.length||0}`).join(" | ");
+ alert("📊 Dashboard:\n"+resumo);
 }
 
 function exportarPDF(){
-  import("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js").then(({ jsPDF })=>{
-    const doc = new jsPDF.jsPDF();
-    let y=10;
-    etapas.forEach(etapa=>{
-      doc.text(`${etapa}: ${dados[etapa]?.length||0}`,10,y);
-      y+=8;
-      (dados[etapa]||[]).forEach(chip=>{
-        doc.text(`- ${chip.numero} | Cliente: ${chip.cliente||''} | Status: ${chip.status}`,12,y);
-        y+=6;
-      });
-      y+=6;
-    });
-    doc.save("controle_chips.pdf");
-  });
+ import("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js")
+ .then(({ jsPDF })=>{
+   const docPDF = new jsPDF();
+   let y=10;
+
+   etapas.forEach(etapa=>{
+     docPDF.text(`${etapa}: ${dados[etapa]?.length||0}`,10,y);
+     y+=8;
+
+     (dados[etapa]||[]).forEach(chip=>{
+       docPDF.text(`- ${chip.numero} | Cliente: ${chip.cliente||''} | Status: ${chip.status}`,12,y);
+       y+=6;
+     });
+
+     y+=6;
+   });
+
+   docPDF.save("controle_chips.pdf");
+ });
 }
 
-// ===== SNAPSHOT REAL-TIME =====
 onSnapshot(collection(db,"chips"),(snapshot)=>{
-  etapas.forEach(e=>dados[e]=[]);
-  snapshot.forEach(docSnap=>{
-    let chip = docSnap.data();
-    chip.id = docSnap.id;
-    dados[chip.status].push(chip);
-  });
-  criarBoard(dados);
-  document.getElementById("status").innerText="✅ Conectado ao Firebase - Dados sincronizados";
+
+ etapas.forEach(e=>dados[e]=[]);
+
+ snapshot.forEach(docSnap=>{
+   let chip = docSnap.data();
+   chip.id = docSnap.id;
+
+   if(!dados[chip.status]) dados[chip.status]=[];
+   dados[chip.status].push(chip);
+ });
+
+ criarBoard(dados);
+
+ document.getElementById("status").innerText =
+ "✅ Conectado ao Firebase - Dados sincronizados";
+
 });
 </script>
 
