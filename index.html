@@ -52,29 +52,29 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let etapas = ["Em Estoque","Em Uso","Retirado","Perdido","Aguardando Ativação"];
+const dados = {};
+etapas.forEach(e=>dados[e]=[]);
 
-// ====== FUNÇÕES ======
 function criarBoard(dados){
   const board = document.getElementById("board");
   board.innerHTML = "";
   etapas.forEach(etapa=>{
     let col = document.createElement("div");
     col.className="column";
-
     let titulo = document.createElement("h3");
     titulo.innerText = etapa;
     col.appendChild(titulo);
 
     let contador = document.createElement("div");
     contador.className="counter";
-    contador.innerText = "Total: "+(dados[etapa]?.length || 0);
+    contador.innerText = "Total: "+(dados[etapa]?.length||0);
     col.appendChild(contador);
 
     (dados[etapa]||[]).forEach(chip=>{
       let card = document.createElement("div");
       card.className="card";
       card.innerHTML = `
-<strong>${chip.numero || "Sem número"}</strong>
+<strong>${chip.numero||"Sem número"}</strong>
 <textarea placeholder="Observações" oninput="editarObservacao('${chip.id}',this.value)">${chip.observacao||""}</textarea>
 <input type="text" placeholder="Cliente vinculado" value="${chip.cliente||""}" oninput="editarCliente('${chip.id}',this.value)">
 <select onchange="alterarStatus('${chip.id}',this.value)">
@@ -97,12 +97,12 @@ function criarBoard(dados){
   });
 }
 
-// ====== FUNÇÕES DE AÇÃO ======
+// ===== FUNÇÕES =====
 async function adicionarChip(){
   let numero = prompt("Número do chip / ICCID:");
   if(!numero) return;
   await addDoc(collection(db,"chips"),{
-    numero: numero,
+    numero,
     status:"Em Estoque",
     cliente:"",
     operadora:"",
@@ -115,46 +115,33 @@ async function editarObservacao(id,texto){ await updateDoc(doc(db,"chips",id),{o
 async function editarCliente(id,texto){ await updateDoc(doc(db,"chips",id),{cliente:texto}); }
 async function editarOperadora(id,texto){ await updateDoc(doc(db,"chips",id),{operadora:texto}); }
 async function editarFornecedor(id,texto){ await updateDoc(doc(db,"chips",id),{fornecedor:texto}); }
-async function alterarStatus(id,status){ await updateDoc(doc(db,"chips",id),{status:status}); }
+async function alterarStatus(id,status){ await updateDoc(doc(db,"chips",id),{status}); }
 async function removerChip(id){ if(confirm("Deseja realmente remover este chip?")){ await deleteDoc(doc(db,"chips",id)); } }
-function copiarMensagem(id){ let msg = document.getElementById(`msg-${id}`); navigator.clipboard.writeText(msg.value); alert("Mensagem copiada para WhatsApp!"); }
+function copiarMensagem(id){ let msg=document.getElementById(`msg-${id}`); navigator.clipboard.writeText(msg.value); alert("Mensagem copiada para WhatsApp!"); }
 
-// ====== DASHBOARD ======
 function mostrarDashboard(){
-  const dados = {};
-  etapas.forEach(e=>dados[e]=[]);
-  onSnapshot(collection(db,"chips"),(snapshot)=>{
-    snapshot.forEach(docSnap=>{
-      let chip = docSnap.data();
-      chip.id = docSnap.id;
-      dados[chip.status].push(chip);
-    });
-    let resumo = etapas.map(e=>`${e}: ${dados[e]?.length||0}`).join(" | ");
-    alert("📊 Dashboard:\n"+resumo);
-  });
+  const resumo = etapas.map(e=>`${e}: ${dados[e]?.length||0}`).join(" | ");
+  alert("📊 Dashboard:\n"+resumo);
 }
 
-// ====== EXPORTAR PDF ======
 function exportarPDF(){
   import("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js").then(({ jsPDF })=>{
     const doc = new jsPDF.jsPDF();
-    let y = 10;
+    let y=10;
     etapas.forEach(etapa=>{
-      doc.text(`${etapa}: ${dados[etapa]?.length||0}`, 10, y);
-      y += 8;
+      doc.text(`${etapa}: ${dados[etapa]?.length||0}`,10,y);
+      y+=8;
       (dados[etapa]||[]).forEach(chip=>{
-        doc.text(`- ${chip.numero} | Cliente: ${chip.cliente||''} | Status: ${chip.status}`, 12, y);
-        y += 6;
+        doc.text(`- ${chip.numero} | Cliente: ${chip.cliente||''} | Status: ${chip.status}`,12,y);
+        y+=6;
       });
-      y += 6;
+      y+=6;
     });
     doc.save("controle_chips.pdf");
   });
 }
 
-// ====== SNAPSHOT REAL-TIME ======
-const dados = {};
-etapas.forEach(e=>dados[e]=[]);
+// ===== SNAPSHOT REAL-TIME =====
 onSnapshot(collection(db,"chips"),(snapshot)=>{
   etapas.forEach(e=>dados[e]=[]);
   snapshot.forEach(docSnap=>{
