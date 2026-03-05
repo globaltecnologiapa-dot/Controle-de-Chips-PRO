@@ -121,7 +121,7 @@ Olá! Estou entrando em contato sobre o chip ${chip.numero}
   });
 }
 
-async function adicionarChip(){
+window.adicionarChip = async function(){
   let numero = prompt("Número do chip / ICCID:");
   if(!numero) return;
 
@@ -135,30 +135,41 @@ async function adicionarChip(){
   });
 }
 
-async function editarObservacao(id,texto){ await updateDoc(doc(db,"chips",id),{observacao:texto}); }
-async function editarCliente(id,texto){ await updateDoc(doc(db,"chips",id),{cliente:texto}); }
-async function editarOperadora(id,texto){ await updateDoc(doc(db,"chips",id),{operadora:texto}); }
-async function editarFornecedor(id,texto){ await updateDoc(doc(db,"chips",id),{fornecedor:texto}); }
-async function alterarStatus(id,status){ await updateDoc(doc(db,"chips",id),{status:status}); }
+window.editarObservacao = async function(id,texto){ await updateDoc(doc(db,"chips",id),{observacao:texto}); }
+window.editarCliente = async function(id,texto){
+ await updateDoc(doc(db,"chips",id),{cliente:texto});
+}
 
-async function removerChip(id){
+window.editarOperadora = async function(id,texto){
+ await updateDoc(doc(db,"chips",id),{operadora:texto});
+}
+
+window.editarFornecedor = async function(id,texto){
+ await updateDoc(doc(db,"chips",id),{fornecedor:texto});
+}
+
+window.alterarStatus = async function(id,status){
+ await updateDoc(doc(db,"chips",id),{status:status});
+}
+
+window.removerChip = async function(id){
  if(confirm("Deseja realmente remover este chip?")){
    await deleteDoc(doc(db,"chips",id));
  }
 }
 
-function copiarMensagem(id){
+window.copiarMensagem = function(id){
  let msg=document.getElementById(`msg-${id}`);
  navigator.clipboard.writeText(msg.value);
  alert("Mensagem copiada para WhatsApp!");
 }
 
-function mostrarDashboard(){
+window.mostrarDashboard = function(){
  let resumo = etapas.map(e=>`${e}: ${dados[e]?.length||0}`).join(" | ");
  alert("📊 Dashboard:\n"+resumo);
 }
 
-function exportarPDF(){
+window.exportarPDF = function(){
  import("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js")
  .then(({ jsPDF })=>{
    const docPDF = new jsPDF();
