@@ -1,214 +1,336 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle de Chips PRO - Global Rastreamento</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
+<title>Controle de Chips PRO V4</title>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <style>
-body{font-family:Arial,sans-serif;background:#0f172a;color:#fff;margin:0;padding:10px}
-h1{text-align:center;font-size:18px;margin-bottom:10px}
-.status{background:#1e293b;padding:8px;border-radius:8px;text-align:center;margin-bottom:10px;font-size:12px}
-.board{display:flex;gap:10px;overflow-x:auto;padding-bottom:20px}
-.column{background:#1e293b;padding:10px;border-radius:12px;min-width:260px;max-width:260px;flex-shrink:0}
-@media(max-width:768px){.column{min-width:75vw;max-width:75vw}}
-.column h3{text-align:center;font-size:14px;margin:5px 0}
-.counter{font-size:12px;text-align:center;margin-bottom:8px;color:#facc15}
-.card{background:#334155;padding:8px;border-radius:8px;margin-bottom:8px;font-size:13px}
-button{padding:6px;border:none;border-radius:6px;cursor:pointer;font-size:12px;width:100%;margin-top:5px}
-.add-btn{background:#facc15;font-weight:bold}
-.small-btn{background:#22c55e;margin-top:3px}
-.delete-btn{background:#ef4444;margin-top:3px}
-input, select, textarea{width:100%;padding:6px;margin-top:5px;border-radius:6px;border:none;font-size:12px;background:#1e293b;color:#fff}
-textarea{height:50px}
-.top-links{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:15px}
+
+body{
+font-family:Arial;
+background:#0f172a;
+color:white;
+margin:0;
+padding:20px
+}
+
+h1{text-align:center}
+
+input,select{
+width:100%;
+padding:8px;
+margin:5px 0;
+border:none;
+border-radius:6px;
+background:#1e293b;
+color:white
+}
+
+button{
+padding:8px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+background:#facc15;
+margin-top:5px
+}
+
+.board{
+display:flex;
+gap:10px;
+overflow-x:auto
+}
+
+.column{
+background:#1e293b;
+padding:10px;
+border-radius:10px;
+min-width:250px
+}
+
+.card{
+background:#334155;
+padding:8px;
+border-radius:8px;
+margin-bottom:8px
+}
+
+.delete{background:#ef4444}
+.whats{background:#22c55e}
+
+.login{
+max-width:300px;
+margin:auto
+}
+
+.dashboard{
+background:#1e293b;
+padding:10px;
+border-radius:10px;
+margin-bottom:10px
+}
+
 </style>
+
 </head>
+
 <body>
 
-<h1>Controle de Chips PRO - Global Rastreamento</h1>
-<div class="status" id="status">🔄 Conectando ao Firebase...</div>
+<div id="login">
 
-<div class="top-links">
-<button class="add-btn" onclick="adicionarChip()">Adicionar Chip</button>
-<button class="add-btn" onclick="exportarPDF()">📄 Exportar PDF</button>
-<button class="add-btn" onclick="mostrarDashboard()">📊 Dashboard</button>
+<h1>Login Sistema</h1>
+
+<div class="login">
+
+<input id="email" placeholder="Email">
+<input id="senha" type="password" placeholder="Senha">
+
+<button onclick="login()">Entrar</button>
+
+</div>
+
+</div>
+
+<div id="sistema" style="display:none">
+
+<h1>Controle de Chips PRO V4</h1>
+
+<button onclick="logout()">Sair</button>
+
+<input id="busca" placeholder="Buscar chip, cliente ou operadora">
+
+<button onclick="novoChip()">Adicionar Chip</button>
+
+<div class="dashboard">
+
+<canvas id="grafico"></canvas>
+
 </div>
 
 <div class="board" id="board"></div>
 
+</div>
+
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } 
+
+import { getFirestore,collection,addDoc,updateDoc,deleteDoc,doc,onSnapshot }
+
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+import { getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged }
+
+from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
 const firebaseConfig = {
-  apiKey: "AIzaSyApCbQJCUQSwP0g6vSBqwrIMSK7n-w9ILc",
-  authDomain: "global-tecnologia-kanban.firebaseapp.com",
-  projectId: "global-tecnologia-kanban",
-  storageBucket: "global-tecnologia-kanban.firebasestorage.app",
-  messagingSenderId: "526527534352",
-  appId: "1:526527534352:web:22b874f8029b3cd4c48195",
-  measurementId: "G-MX3QFXSL04"
+
+apiKey:"SUA_API",
+authDomain:"SEU_DOMINIO",
+projectId:"SEU_PROJETO"
+
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
 
-let etapas = ["Em Estoque","Em Uso","Retirado","Perdido","Aguardando Ativação"];
-const dados = {};
+const db=getFirestore(app);
+
+const auth=getAuth(app);
+
+let etapas=["Em Estoque","Em Uso","Retirado","Perdido"];
+
+let dados={};
+
 etapas.forEach(e=>dados[e]=[]);
 
-function criarBoard(dados){
-  const board = document.getElementById("board");
-  board.innerHTML = "";
+window.login=function(){
 
-  etapas.forEach(etapa=>{
-    let col = document.createElement("div");
-    col.className="column";
+let email=document.getElementById("email").value;
 
-    let titulo=document.createElement("h3");
-    titulo.innerText=etapa;
-    col.appendChild(titulo);
+let senha=document.getElementById("senha").value;
 
-    let contador=document.createElement("div");
-    contador.className="counter";
-    contador.innerText="Total: "+(dados[etapa]?.length||0);
-    col.appendChild(contador);
+signInWithEmailAndPassword(auth,email,senha)
 
-    (dados[etapa]||[]).forEach(chip=>{
-      let card=document.createElement("div");
-      card.className="card";
-
-      card.innerHTML=`
-<strong>${chip.numero||"Sem número"}</strong>
-
-<textarea placeholder="Observações" 
-oninput="editarObservacao('${chip.id}',this.value)">${chip.observacao||""}</textarea>
-
-<input type="text" placeholder="Cliente vinculado"
-value="${chip.cliente||""}"
-oninput="editarCliente('${chip.id}',this.value)">
-
-<select onchange="alterarStatus('${chip.id}',this.value)">
-<option value="Em Estoque" ${chip.status==="Em Estoque"?"selected":""}>Em Estoque</option>
-<option value="Em Uso" ${chip.status==="Em Uso"?"selected":""}>Em Uso</option>
-<option value="Retirado" ${chip.status==="Retirado"?"selected":""}>Retirado</option>
-<option value="Perdido" ${chip.status==="Perdido"?"selected":""}>Perdido</option>
-<option value="Aguardando Ativação" ${chip.status==="Aguardando Ativação"?"selected":""}>Aguardando Ativação</option>
-</select>
-
-<input type="text" placeholder="Operadora"
-value="${chip.operadora||""}"
-oninput="editarOperadora('${chip.id}',this.value)">
-
-<input type="text" placeholder="Fornecedor"
-value="${chip.fornecedor||""}"
-oninput="editarFornecedor('${chip.id}',this.value)">
-
-<button class="delete-btn" onclick="removerChip('${chip.id}')">Excluir</button>
-<button class="small-btn" onclick="copiarMensagem('${chip.id}')">Copiar Msg WhatsApp</button>
-
-<textarea id="msg-${chip.id}" style="display:none;">
-Olá! Estou entrando em contato sobre o chip ${chip.numero}
-</textarea>
-`;
-
-      col.appendChild(card);
-    });
-
-    board.appendChild(col);
-  });
 }
 
-window.adicionarChip = async function(){
-  let numero = prompt("Número do chip / ICCID:");
-  if(!numero) return;
+window.logout=function(){
 
-  await addDoc(collection(db,"chips"),{
-    numero:numero,
-    status:"Em Estoque",
-    cliente:"",
-    operadora:"",
-    fornecedor:"",
-    observacao:""
-  });
+signOut(auth)
+
 }
 
-window.editarObservacao = async function(id,texto){ await updateDoc(doc(db,"chips",id),{observacao:texto}); }
-window.editarCliente = async function(id,texto){
- await updateDoc(doc(db,"chips",id),{cliente:texto});
+onAuthStateChanged(auth,user=>{
+
+if(user){
+
+document.getElementById("login").style.display="none";
+
+document.getElementById("sistema").style.display="block";
+
+carregar();
+
 }
 
-window.editarOperadora = async function(id,texto){
- await updateDoc(doc(db,"chips",id),{operadora:texto});
+else{
+
+document.getElementById("login").style.display="block";
+
+document.getElementById("sistema").style.display="none";
+
 }
-
-window.editarFornecedor = async function(id,texto){
- await updateDoc(doc(db,"chips",id),{fornecedor:texto});
-}
-
-window.alterarStatus = async function(id,status){
- await updateDoc(doc(db,"chips",id),{status:status});
-}
-
-window.removerChip = async function(id){
- if(confirm("Deseja realmente remover este chip?")){
-   await deleteDoc(doc(db,"chips",id));
- }
-}
-
-window.copiarMensagem = function(id){
- let msg=document.getElementById(`msg-${id}`);
- navigator.clipboard.writeText(msg.value);
- alert("Mensagem copiada para WhatsApp!");
-}
-
-window.mostrarDashboard = function(){
- let resumo = etapas.map(e=>`${e}: ${dados[e]?.length||0}`).join(" | ");
- alert("📊 Dashboard:\n"+resumo);
-}
-
-window.exportarPDF = function(){
- import("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js")
- .then(({ jsPDF })=>{
-   const docPDF = new jsPDF();
-   let y=10;
-
-   etapas.forEach(etapa=>{
-     docPDF.text(`${etapa}: ${dados[etapa]?.length||0}`,10,y);
-     y+=8;
-
-     (dados[etapa]||[]).forEach(chip=>{
-       docPDF.text(`- ${chip.numero} | Cliente: ${chip.cliente||''} | Status: ${chip.status}`,12,y);
-       y+=6;
-     });
-
-     y+=6;
-   });
-
-   docPDF.save("controle_chips.pdf");
- });
-}
-
-onSnapshot(collection(db,"chips"),(snapshot)=>{
-
- etapas.forEach(e=>dados[e]=[]);
-
- snapshot.forEach(docSnap=>{
-   let chip = docSnap.data();
-   chip.id = docSnap.id;
-
-   if(!dados[chip.status]) dados[chip.status]=[];
-   dados[chip.status].push(chip);
- });
-
- criarBoard(dados);
-
- document.getElementById("status").innerText =
- "✅ Conectado ao Firebase - Dados sincronizados";
 
 });
+
+function carregar(){
+
+onSnapshot(collection(db,"chips"),snap=>{
+
+etapas.forEach(e=>dados[e]=[]);
+
+snap.forEach(d=>{
+
+let chip=d.data();
+
+chip.id=d.id;
+
+dados[chip.status].push(chip);
+
+});
+
+render();
+
+});
+
+}
+
+function render(){
+
+let busca=document.getElementById("busca").value?.toLowerCase()||"";
+
+let board=document.getElementById("board");
+
+board.innerHTML="";
+
+etapas.forEach(etapa=>{
+
+let col=document.createElement("div");
+
+col.className="column";
+
+col.innerHTML=`<h3>${etapa}</h3>`;
+
+dados[etapa]
+
+.filter(c=>(c.numero+c.cliente+c.operadora).toLowerCase().includes(busca))
+
+.forEach(chip=>{
+
+let card=document.createElement("div");
+
+card.className="card";
+
+card.innerHTML=`
+
+<strong>${chip.numero}</strong>
+
+<input value="${chip.cliente||""}" 
+oninput="editar('${chip.id}','cliente',this.value)">
+
+<input value="${chip.operadora||""}"
+oninput="editar('${chip.id}','operadora',this.value)">
+
+<select onchange="editar('${chip.id}','status',this.value)">
+
+<option ${chip.status=="Em Estoque"?"selected":""}>Em Estoque</option>
+<option ${chip.status=="Em Uso"?"selected":""}>Em Uso</option>
+<option ${chip.status=="Retirado"?"selected":""}>Retirado</option>
+<option ${chip.status=="Perdido"?"selected":""}>Perdido</option>
+
+</select>
+
+<button class="whats" onclick="whats('${chip.numero}')">WhatsApp</button>
+
+<button class="delete" onclick="remover('${chip.id}')">Excluir</button>
+
+`;
+
+col.appendChild(card);
+
+});
+
+board.appendChild(col);
+
+});
+
+grafico();
+
+}
+
+window.editar=async function(id,campo,valor){
+
+await updateDoc(doc(db,"chips",id),{[campo]:valor});
+
+}
+
+window.remover=async function(id){
+
+if(confirm("Excluir chip?"))
+
+await deleteDoc(doc(db,"chips",id));
+
+}
+
+window.novoChip=async function(){
+
+let numero=prompt("Número do chip");
+
+await addDoc(collection(db,"chips"),{
+
+numero:numero,
+
+cliente:"",
+
+operadora:"",
+
+status:"Em Estoque"
+
+});
+
+}
+
+window.whats=function(numero){
+
+window.open(`https://wa.me/?text=Olá estou verificando o chip ${numero}`);
+
+}
+
+function grafico(){
+
+let dadosGraf=etapas.map(e=>dados[e].length);
+
+new Chart(document.getElementById("grafico"),{
+
+type:"pie",
+
+data:{
+
+labels:etapas,
+
+datasets:[{data:dadosGraf}]
+
+}
+
+});
+
+}
+
+document.addEventListener("input",render);
+
 </script>
 
 </body>
