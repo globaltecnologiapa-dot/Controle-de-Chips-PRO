@@ -146,7 +146,7 @@ height:100% !important;
 
 <div class="container">
 
-<input id="busca" placeholder="Buscar chip, cliente ou operadora">
+<input id="busca" placeholder="Buscar chip, cliente, operadora, fornecedor ou observação">
 
 <button class="add" onclick="novoChip()">Adicionar Chip</button>
 
@@ -197,13 +197,9 @@ height:100% !important;
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-
 import { getFirestore,collection,addDoc,updateDoc,deleteDoc,doc,onSnapshot }
-
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
 import { getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged }
-
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
@@ -304,7 +300,13 @@ col.innerHTML=`<h3>${etapa}</h3>`;
 
 dados[etapa]
 
-.filter(c=>((c.numero||"")+(c.cliente||"")+(c.operadora||"")).toLowerCase().includes(busca))
+.filter(c=>(
+(c.numero||"")+
+(c.cliente||"")+
+(c.operadora||"")+
+(c.fornecedor||"")+
+(c.obs||"")
+).toLowerCase().includes(busca))
 
 .forEach(chip=>{
 
@@ -321,11 +323,21 @@ card.innerHTML=`
 
 <strong>${chip.numero}</strong>
 
-<input value="${chip.cliente||""}" 
+<input placeholder="Cliente"
+value="${chip.cliente||""}" 
 oninput="editar('${chip.id}','cliente',this.value)">
 
-<input value="${chip.operadora||""}"
+<input placeholder="Operadora"
+value="${chip.operadora||""}"
 oninput="editar('${chip.id}','operadora',this.value)">
+
+<input placeholder="Fornecedor"
+value="${chip.fornecedor||""}"
+oninput="editar('${chip.id}','fornecedor',this.value)">
+
+<input placeholder="Observação"
+value="${chip.obs||""}"
+oninput="editar('${chip.id}','obs',this.value)">
 
 <select onchange="editar('${chip.id}','status',this.value)">
 
@@ -381,6 +393,8 @@ await addDoc(collection(db,"chips"),{
 numero:numero,
 cliente:"",
 operadora:"",
+fornecedor:"",
+obs:"",
 status:"Em Estoque"
 
 });
