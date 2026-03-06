@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-<title>Controle de Chips PRO V4</title>
+<title>Controle de Chips PRO V5 ULTRA</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -16,15 +16,24 @@ font-family:Arial;
 background:#0f172a;
 color:white;
 margin:0;
-padding:20px
 }
 
-h1{text-align:center}
+header{
+background:#020617;
+padding:15px;
+display:flex;
+justify-content:space-between;
+align-items:center
+}
+
+h1{font-size:18px;margin:0}
+
+.container{padding:20px}
 
 input,select{
 width:100%;
 padding:8px;
-margin:5px 0;
+margin-top:5px;
 border:none;
 border-radius:6px;
 background:#1e293b;
@@ -36,8 +45,25 @@ padding:8px;
 border:none;
 border-radius:6px;
 cursor:pointer;
-background:#facc15;
 margin-top:5px
+}
+
+.add{background:#facc15}
+.delete{background:#ef4444}
+.whats{background:#22c55e}
+
+.cards{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:10px;
+margin-bottom:20px
+}
+
+.stat{
+background:#1e293b;
+padding:15px;
+border-radius:10px;
+text-align:center
 }
 
 .board{
@@ -50,7 +76,7 @@ overflow-x:auto
 background:#1e293b;
 padding:10px;
 border-radius:10px;
-min-width:250px
+min-width:260px
 }
 
 .card{
@@ -60,19 +86,16 @@ border-radius:8px;
 margin-bottom:8px
 }
 
-.delete{background:#ef4444}
-.whats{background:#22c55e}
-
 .login{
 max-width:300px;
-margin:auto
+margin:auto;
+margin-top:100px
 }
 
-.dashboard{
+canvas{
 background:#1e293b;
 padding:10px;
-border-radius:10px;
-margin-bottom:10px
+border-radius:10px
 }
 
 </style>
@@ -83,9 +106,9 @@ margin-bottom:10px
 
 <div id="login">
 
-<h1>Login Sistema</h1>
-
 <div class="login">
+
+<h1>Login Sistema</h1>
 
 <input id="email" placeholder="Email">
 <input id="senha" type="password" placeholder="Senha">
@@ -98,21 +121,55 @@ margin-bottom:10px
 
 <div id="sistema" style="display:none">
 
-<h1>Controle de Chips PRO V4</h1>
+<header>
+
+<h1>Controle de Chips PRO V5 ULTRA</h1>
 
 <button onclick="logout()">Sair</button>
 
+</header>
+
+<div class="container">
+
 <input id="busca" placeholder="Buscar chip, cliente ou operadora">
 
-<button onclick="novoChip()">Adicionar Chip</button>
+<button class="add" onclick="novoChip()">Adicionar Chip</button>
 
-<div class="dashboard">
+<div class="cards">
 
-<canvas id="grafico"></canvas>
+<div class="stat">
+<div>Total Chips</div>
+<strong id="t1">0</strong>
+</div>
+
+<div class="stat">
+<div>Em Uso</div>
+<strong id="t2">0</strong>
+</div>
+
+<div class="stat">
+<div>Estoque</div>
+<strong id="t3">0</strong>
+</div>
+
+<div class="stat">
+<div>Perdidos</div>
+<strong id="t4">0</strong>
+</div>
 
 </div>
 
+<canvas id="graficoStatus"></canvas>
+
+<br><br>
+
+<canvas id="graficoOperadora"></canvas>
+
+<br><br>
+
 <div class="board" id="board"></div>
+
+</div>
 
 </div>
 
@@ -148,6 +205,9 @@ let etapas=["Em Estoque","Em Uso","Retirado","Perdido"];
 
 let dados={};
 
+let chart1;
+let chart2;
+
 etapas.forEach(e=>dados[e]=[]);
 
 window.login=function(){
@@ -156,13 +216,13 @@ let email=document.getElementById("email").value;
 
 let senha=document.getElementById("senha").value;
 
-signInWithEmailAndPassword(auth,email,senha)
+signInWithEmailAndPassword(auth,email,senha);
 
 }
 
 window.logout=function(){
 
-signOut(auth)
+signOut(auth);
 
 }
 
@@ -170,9 +230,9 @@ onAuthStateChanged(auth,user=>{
 
 if(user){
 
-document.getElementById("login").style.display="none";
+login.style.display="none";
 
-document.getElementById("sistema").style.display="block";
+sistema.style.display="block";
 
 carregar();
 
@@ -180,9 +240,9 @@ carregar();
 
 else{
 
-document.getElementById("login").style.display="block";
+login.style.display="block";
 
-document.getElementById("sistema").style.display="none";
+sistema.style.display="none";
 
 }
 
@@ -199,6 +259,8 @@ snap.forEach(d=>{
 let chip=d.data();
 
 chip.id=d.id;
+
+if(!dados[chip.status])dados[chip.status]=[];
 
 dados[chip.status].push(chip);
 
@@ -218,6 +280,14 @@ let board=document.getElementById("board");
 
 board.innerHTML="";
 
+let total=0;
+
+let uso=0;
+
+let estoque=0;
+
+let perdido=0;
+
 etapas.forEach(etapa=>{
 
 let col=document.createElement("div");
@@ -228,9 +298,17 @@ col.innerHTML=`<h3>${etapa}</h3>`;
 
 dados[etapa]
 
-.filter(c=>(c.numero+c.cliente+c.operadora).toLowerCase().includes(busca))
+.filter(c=>((c.numero||"")+(c.cliente||"")+(c.operadora||"")).toLowerCase().includes(busca))
 
 .forEach(chip=>{
+
+total++;
+
+if(chip.status=="Em Uso")uso++;
+
+if(chip.status=="Em Estoque")estoque++;
+
+if(chip.status=="Perdido")perdido++;
 
 let card=document.createElement("div");
 
@@ -268,6 +346,11 @@ col.appendChild(card);
 board.appendChild(col);
 
 });
+
+document.getElementById("t1").innerText=total;
+document.getElementById("t2").innerText=uso;
+document.getElementById("t3").innerText=estoque;
+document.getElementById("t4").innerText=perdido;
 
 grafico();
 
@@ -307,7 +390,7 @@ status:"Em Estoque"
 
 window.whats=function(numero){
 
-window.open(`https://wa.me/?text=Olá estou verificando o chip ${numero}`);
+window.open(`https://wa.me/?text=Verificando chip ${numero}`);
 
 }
 
@@ -315,7 +398,9 @@ function grafico(){
 
 let dadosGraf=etapas.map(e=>dados[e].length);
 
-new Chart(document.getElementById("grafico"),{
+if(chart1)chart1.destroy();
+
+chart1=new Chart(document.getElementById("graficoStatus"),{
 
 type:"pie",
 
@@ -324,6 +409,34 @@ data:{
 labels:etapas,
 
 datasets:[{data:dadosGraf}]
+
+}
+
+});
+
+let operadoras={};
+
+Object.values(dados).flat().forEach(c=>{
+
+let op=c.operadora||"Sem";
+
+if(!operadoras[op])operadoras[op]=0;
+
+operadoras[op]++;
+
+});
+
+if(chart2)chart2.destroy();
+
+chart2=new Chart(document.getElementById("graficoOperadora"),{
+
+type:"bar",
+
+data:{
+
+labels:Object.keys(operadoras),
+
+datasets:[{data:Object.values(operadoras)}]
 
 }
 
