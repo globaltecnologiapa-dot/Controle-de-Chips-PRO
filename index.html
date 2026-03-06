@@ -98,6 +98,25 @@ padding:10px;
 border-radius:10px
 }
 
+  .graficos{
+display:flex;
+gap:20px;
+flex-wrap:wrap;
+margin-top:20px;
+}
+
+.grafico-box{
+width:320px;
+height:220px;
+background:#1e1e1e;
+padding:10px;
+border-radius:10px;
+}
+
+canvas{
+width:100% !important;
+height:100% !important;
+}
 </style>
 
 </head>
@@ -157,17 +176,17 @@ border-radius:10px
 <strong id="t4">0</strong>
 </div>
 
+<h3>Dashboard</h3>
+
+<div class="graficos">
+
+<div class="grafico-box">
+<canvas id="graficoStatus"></canvas>
 </div>
 
-<canvas id="graficoStatus"></canvas>
-
-<br><br>
-
+<div class="grafico-box">
 <canvas id="graficoOperadora"></canvas>
-
-<br><br>
-
-<div class="board" id="board"></div>
+</div>
 
 </div>
 
