@@ -69,7 +69,8 @@ text-align:center
 .board{
 display:flex;
 gap:10px;
-overflow-x:auto
+overflow-x:auto;
+margin-top:30px
 }
 
 .column{
@@ -92,13 +93,7 @@ margin:auto;
 margin-top:120px
 }
 
-canvas{
-background:#1e293b;
-padding:10px;
-border-radius:10px
-}
-
-  .graficos{
+.graficos{
 display:flex;
 gap:20px;
 flex-wrap:wrap;
@@ -108,7 +103,7 @@ margin-top:20px;
 .grafico-box{
 width:320px;
 height:220px;
-background:#1e1e1e;
+background:#1e293b;
 padding:10px;
 border-radius:10px;
 }
@@ -117,7 +112,7 @@ canvas{
 width:100% !important;
 height:100% !important;
 }
-  
+
 </style>
 
 </head>
@@ -177,6 +172,8 @@ height:100% !important;
 <strong id="t4">0</strong>
 </div>
 
+</div>
+
 <h3>Dashboard</h3>
 
 <div class="graficos">
@@ -188,6 +185,10 @@ height:100% !important;
 <div class="grafico-box">
 <canvas id="graficoOperadora"></canvas>
 </div>
+
+</div>
+
+<div class="board" id="board"></div>
 
 </div>
 
@@ -206,25 +207,22 @@ import { getAuth,signInWithEmailAndPassword,signOut,onAuthStateChanged }
 from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyApCbQJCUQSwP0g6vSBqwrIMSK7n-w9ILc",
-  authDomain: "global-tecnologia-kanban.firebaseapp.com",
-  projectId: "global-tecnologia-kanban",
-  storageBucket: "global-tecnologia-kanban.firebasestorage.app",
-  messagingSenderId: "526527534352",
-  appId: "1:526527534352:web:22b874f8029b3cd4c48195",
-  measurementId: "G-MX3QFXSL04"
+apiKey: "AIzaSyApCbQJCUQSwP0g6vSBqwrIMSK7n-w9ILc",
+authDomain: "global-tecnologia-kanban.firebaseapp.com",
+projectId: "global-tecnologia-kanban",
+storageBucket: "global-tecnologia-kanban.firebasestorage.app",
+messagingSenderId: "526527534352",
+appId: "1:526527534352:web:22b874f8029b3cd4c48195",
+measurementId: "G-MX3QFXSL04"
 };
 
 const app=initializeApp(firebaseConfig);
-
 const db=getFirestore(app);
-
 const auth=getAuth(app);
 
 let etapas=["Em Estoque","Em Uso","Retirado","Perdido"];
 
 let dados={};
-
 let chart1;
 let chart2;
 
@@ -241,9 +239,7 @@ signInWithEmailAndPassword(auth,email,senha)
 }
 
 window.logout=function(){
-
 signOut(auth);
-
 }
 
 onAuthStateChanged(auth,user=>{
@@ -292,7 +288,6 @@ function render(){
 let busca=document.getElementById("busca").value.toLowerCase();
 
 let board=document.getElementById("board");
-
 board.innerHTML="";
 
 let total=0;
@@ -303,7 +298,6 @@ let perdido=0;
 etapas.forEach(etapa=>{
 
 let col=document.createElement("div");
-
 col.className="column";
 
 col.innerHTML=`<h3>${etapa}</h3>`;
@@ -321,7 +315,6 @@ if(chip.status=="Em Estoque")estoque++;
 if(chip.status=="Perdido")perdido++;
 
 let card=document.createElement("div");
-
 card.className="card";
 
 card.innerHTML=`
@@ -367,15 +360,12 @@ grafico();
 }
 
 window.editar=async function(id,campo,valor){
-
 await updateDoc(doc(db,"chips",id),{[campo]:valor});
-
 }
 
 window.remover=async function(id){
 
 if(confirm("Excluir chip?"))
-
 await deleteDoc(doc(db,"chips",id));
 
 }
@@ -398,9 +388,7 @@ status:"Em Estoque"
 }
 
 window.whats=function(numero){
-
 window.open(`https://wa.me/?text=Verificando chip ${numero}`);
-
 }
 
 function grafico(){
@@ -410,14 +398,11 @@ let dadosGraf=etapas.map(e=>dados[e].length);
 if(chart1)chart1.destroy();
 
 chart1=new Chart(document.getElementById("graficoStatus"),{
-
 type:"pie",
-
 data:{
 labels:etapas,
 datasets:[{data:dadosGraf}]
 }
-
 });
 
 let operadoras={};
