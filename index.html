@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
-<title>Controle de Chips PRO V5 ULTRA</title>
+<title>Controle de Chips PRO V5.2</title>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -15,7 +15,7 @@ body{
 font-family:Arial;
 background:#0f172a;
 color:white;
-margin:0;
+margin:0
 }
 
 header{
@@ -54,7 +54,7 @@ margin-top:5px
 
 .cards{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
 gap:10px;
 margin-bottom:20px
 }
@@ -89,7 +89,7 @@ margin-bottom:8px
 .login{
 max-width:300px;
 margin:auto;
-margin-top:100px
+margin-top:120px
 }
 
 canvas{
@@ -123,7 +123,7 @@ border-radius:10px
 
 <header>
 
-<h1>Controle de Chips PRO V5 ULTRA</h1>
+<h1>Controle de Chips PRO V5.2</h1>
 
 <button onclick="logout()">Sair</button>
 
@@ -213,10 +213,10 @@ etapas.forEach(e=>dados[e]=[]);
 window.login=function(){
 
 let email=document.getElementById("email").value;
-
 let senha=document.getElementById("senha").value;
 
-signInWithEmailAndPassword(auth,email,senha);
+signInWithEmailAndPassword(auth,email,senha)
+.catch(e=>alert("Erro login: "+e.message))
 
 }
 
@@ -230,19 +230,15 @@ onAuthStateChanged(auth,user=>{
 
 if(user){
 
-login.style.display="none";
-
-sistema.style.display="block";
+document.getElementById("login").style.display="none";
+document.getElementById("sistema").style.display="block";
 
 carregar();
 
-}
+}else{
 
-else{
-
-login.style.display="block";
-
-sistema.style.display="none";
+document.getElementById("login").style.display="block";
+document.getElementById("sistema").style.display="none";
 
 }
 
@@ -257,7 +253,6 @@ etapas.forEach(e=>dados[e]=[]);
 snap.forEach(d=>{
 
 let chip=d.data();
-
 chip.id=d.id;
 
 if(!dados[chip.status])dados[chip.status]=[];
@@ -274,18 +269,15 @@ render();
 
 function render(){
 
-let busca=document.getElementById("busca").value?.toLowerCase()||"";
+let busca=document.getElementById("busca").value.toLowerCase();
 
 let board=document.getElementById("board");
 
 board.innerHTML="";
 
 let total=0;
-
 let uso=0;
-
 let estoque=0;
-
 let perdido=0;
 
 etapas.forEach(etapa=>{
@@ -305,9 +297,7 @@ dados[etapa]
 total++;
 
 if(chip.status=="Em Uso")uso++;
-
 if(chip.status=="Em Estoque")estoque++;
-
 if(chip.status=="Perdido")perdido++;
 
 let card=document.createElement("div");
@@ -374,14 +364,13 @@ window.novoChip=async function(){
 
 let numero=prompt("Número do chip");
 
+if(!numero)return;
+
 await addDoc(collection(db,"chips"),{
 
 numero:numero,
-
 cliente:"",
-
 operadora:"",
-
 status:"Em Estoque"
 
 });
@@ -405,11 +394,8 @@ chart1=new Chart(document.getElementById("graficoStatus"),{
 type:"pie",
 
 data:{
-
 labels:etapas,
-
 datasets:[{data:dadosGraf}]
-
 }
 
 });
@@ -433,11 +419,8 @@ chart2=new Chart(document.getElementById("graficoOperadora"),{
 type:"bar",
 
 data:{
-
 labels:Object.keys(operadoras),
-
 datasets:[{data:Object.values(operadoras)}]
-
 }
 
 });
